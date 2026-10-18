@@ -42,6 +42,9 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 
+const themeToggle = document.getElementById('theme-toggle');
+const themeColors = { grid: '#22222e', highlight: 'rgba(255,255,255,0.12)' };
+
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
 function createBoard() {
@@ -165,13 +168,13 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   context.fillStyle = color;
   context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
   // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
+  context.fillStyle = themeColors.highlight;
   context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = themeColors.grid;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -302,5 +305,22 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const style = getComputedStyle(document.documentElement);
+  themeColors.grid = style.getPropertyValue('--grid').trim();
+  themeColors.highlight = style.getPropertyValue('--block-highlight').trim();
+  themeToggle.setAttribute('aria-checked', String(theme === 'light'));
+  // repintar aunque el juego esté en pausa o terminado
+  if (current) { draw(); drawNext(); }
+}
+
+themeToggle.addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+  themeToggle.blur(); // evita que el botón capture Space y las teclas del juego
+});
+
+applyTheme('dark');
 
 init();
