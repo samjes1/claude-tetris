@@ -47,6 +47,12 @@ jobs:
                `gh issue comment ${{ github.event.issue.number }} --edit-last --create-if-none --body-file /tmp/triage.md`
                (esto crea el comentario la primera vez y lo actualiza en ediciones posteriores).
 
+            IMPORTANTE: el comentario DEBE estar en Markdown válido de GitHub (GFM) para que se renderice correctamente:
+            - Usa encabezados `##`/`###`, **negritas**, listas con `-`, y `código` inline con backticks.
+            - Deja una línea en blanco entre cada sección/párrafo (sin ella GitHub une las líneas en un solo párrafo).
+            - Bloques de código con triple backtick y lenguaje (```js).
+            - Referencias a archivos como `archivo:línea`. No uses HTML ni texto plano sin formato.
+
             Formato del diagnóstico (en español, Markdown):
             ## 🔍 Diagnóstico automático (Claude)
             **Resumen:** qué pide o reporta el issue, en 1-3 frases.
