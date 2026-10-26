@@ -193,7 +193,8 @@ kbd {
   color: var(--accent);
 }
 
-#restart-btn {
+#restart-btn,
+#play-btn {
   margin-top: 8px;
   background: var(--accent);
   color: var(--on-accent);
@@ -207,8 +208,147 @@ kbd {
   transition: background 0.15s;
 }
 
-#restart-btn:hover {
+#restart-btn:hover,
+#play-btn:hover,
+.small-btn:hover {
   background: var(--accent-hover);
+}
+
+/* ---- Records ---- */
+.hidden {
+  display: none !important;
+}
+
+.start-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+
+.records {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.records-table {
+  border-collapse: collapse;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 240px;
+}
+
+.records-table th {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.records-table td {
+  padding: 3px 6px;
+}
+
+.records-table td:nth-child(2) {
+  text-align: left;
+}
+
+.records-table td:nth-child(n + 3) {
+  text-align: right;
+}
+
+.records-table tr.highlight td {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}
+
+.records-empty {
+  font-size: 12px;
+  color: var(--muted-text);
+}
+
+.records-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.records-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.records-stats .value {
+  font-size: 18px;
+}
+
+.new-record {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.name-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.name-row {
+  display: flex;
+  gap: 6px;
+}
+
+#name-input {
+  width: 140px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  user-select: text;
+}
+
+#name-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.small-btn {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--muted-text);
+  font-size: 11px;
+  font-family: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--danger);
 }
 
 /* ---- Toggle de tema ---- */
