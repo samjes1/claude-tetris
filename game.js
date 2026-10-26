@@ -44,6 +44,19 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const controlsBtn = document.getElementById('controls-btn');
+const pauseControls = document.getElementById('pause-controls');
+const startLevelSelect = document.getElementById('start-level');
+
+const MAX_START_LEVEL = 10;
+let startLevel = 1;     // selección del menú (se aplica en la próxima partida)
+let gameStartLevel = 1; // nivel inicial de la partida en curso
+const pressedKeys = new Set();    // teclas actualmente pulsadas
+let suppressedKeys = new Set();   // teclas mantenidas al reanudar/reiniciar: se ignoran hasta soltarlas
+
 const themeToggle = document.getElementById('theme-toggle');
 const themeColors = { grid: '#22222e', highlight: 'rgba(255,255,255,0.12)' };
 
@@ -100,6 +113,10 @@ function merge() {
         board[current.y + r][current.x + c] = current.shape[r][c];
 }
 
+function intervalFor(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
+}
+
 function clearLines() {
   let cleared = 0;
   for (let r = ROWS - 1; r >= 0; r--) {
@@ -113,8 +130,8 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = Math.max(gameStartLevel, Math.floor(lines / 10) + 1);
+    dropInterval = intervalFor(level);
     updateHUD();
   }
 }
@@ -233,18 +250,36 @@ function endGame() {
   overlay.classList.remove('hidden');
 }
 
-function togglePause() {
-  if (gameOver) return;
-  paused = !paused;
-  if (!paused) {
-    lastTime = performance.now();
-    loop(lastTime);
-  } else {
-    cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
-  }
+function setControlsVisible(visible) {
+  pauseControls.classList.toggle('hidden', !visible);
+  controlsBtn.setAttribute('aria-expanded', String(visible));
+  controlsBtn.textContent = visible ? 'Ocultar controles' : 'Ver controles';
+}
+
+function openPauseMenu() {
+  if (gameOver || paused) return;
+  paused = true;
+  cancelAnimationFrame(animId);
+  startLevelSelect.value = String(startLevel);
+  setControlsVisible(false);
+  pauseMenu.classList.remove('hidden');
+  resumeBtn.focus();
+}
+
+function closePauseMenu() {
+  pauseMenu.classList.add('hidden');
+  // quita el foco de los controles del menú para que no capturen teclas del juego
+  if (pauseMenu.contains(document.activeElement)) document.activeElement.blur();
+}
+
+function resume() {
+  if (!paused || gameOver) return;
+  closePauseMenu();
+  paused = false;
+  suppressedKeys = new Set(pressedKeys);
+  // dropAccum se conserva: pausar/reanudar no debe permitir frenar la gravedad
+  lastTime = performance.now();
+  animId = requestAnimationFrame(loop);
 }
 
 function loop(ts) {
@@ -270,23 +305,66 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  gameStartLevel = startLevel;
+  level = gameStartLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  suppressedKeys = new Set(pressedKeys);
+  dropInterval = intervalFor(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  closePauseMenu();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
+const PAUSE_KEYS = ['KeyP', 'Escape'];
+const GAME_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'KeyX', 'Space'];
+
+function menuFocusables() {
+  return [...pauseMenu.querySelectorAll('button, select')];
+}
+
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  pressedKeys.add(e.code);
+  if (paused) {
+    // menú abierto: P/Esc reanudan; el resto solo sirve para navegar el menú
+    // (Esc sobre el selector se deja al navegador para cerrar su desplegable)
+    if (PAUSE_KEYS.includes(e.code) && !(e.code === 'Escape' && e.target === startLevelSelect)) {
+      e.preventDefault();
+      if (!e.repeat) resume();
+      return;
+    }
+    // atrapa el foco dentro del menú
+    if (e.code === 'Tab') {
+      const items = menuFocusables();
+      const idx = items.indexOf(document.activeElement);
+      const nextIdx = idx === -1 ? 0 : (idx + (e.shiftKey ? -1 : 1) + items.length) % items.length;
+      e.preventDefault();
+      items[nextIdx].focus();
+      return;
+    }
+    // flechas solo para el selector; Space solo para activar botones del menú
+    const onSelect = document.activeElement === startLevelSelect;
+    const onMenuBtn = document.activeElement instanceof HTMLButtonElement && pauseMenu.contains(document.activeElement);
+    if (GAME_KEYS.includes(e.code) && !onSelect && !(e.code === 'Space' && onMenuBtn)) e.preventDefault();
+    return;
+  }
+  if (gameOver) return;
+  if (PAUSE_KEYS.includes(e.code)) {
+    if (!e.repeat) openPauseMenu();
+    return;
+  }
+  if (GAME_KEYS.includes(e.code)) e.preventDefault();
+  // ignora teclas que se mantenían pulsadas al salir del menú/reiniciar
+  if (suppressedKeys.has(e.code)) {
+    if (e.repeat) return;
+    suppressedKeys.delete(e.code);
+  }
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -302,14 +380,41 @@ document.addEventListener('keydown', e => {
       tryRotate();
       break;
     case 'Space':
-      e.preventDefault();
       hardDrop();
       break;
   }
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+document.addEventListener('keyup', e => {
+  pressedKeys.delete(e.code);
+  suppressedKeys.delete(e.code);
+});
+
+// al perder el foco de la ventana no llegan los keyup: olvidar teclas pulsadas
+window.addEventListener('blur', () => pressedKeys.clear());
+
+restartBtn.addEventListener('click', () => {
+  init();
+  restartBtn.blur();
+});
+
+// ---- Menú de pausa ----
+for (let l = 1; l <= MAX_START_LEVEL; l++) {
+  const opt = document.createElement('option');
+  opt.value = String(l);
+  opt.textContent = String(l);
+  startLevelSelect.appendChild(opt);
+}
+
+resumeBtn.addEventListener('click', resume);
+pauseRestartBtn.addEventListener('click', init);
+controlsBtn.addEventListener('click', () => {
+  setControlsVisible(pauseControls.classList.contains('hidden'));
+});
+startLevelSelect.addEventListener('change', () => {
+  startLevel = Number(startLevelSelect.value);
+});
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
