@@ -211,6 +211,119 @@ kbd {
   background: var(--accent-hover);
 }
 
+/* ---- Menú de pausa ---- */
+.pause-box {
+  width: 220px;
+}
+
+#pause-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+
+.menu-main,
+.menu-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-main.hidden,
+.menu-controls.hidden {
+  display: none;
+}
+
+.menu-btn {
+  width: 100%;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.menu-btn:hover,
+.menu-btn:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.menu-btn[data-action="resume"] {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+
+.menu-btn[data-action="resume"]:hover,
+.menu-btn[data-action="resume"]:focus-visible {
+  background: var(--accent-hover);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.menu-level {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--muted-text);
+}
+
+.menu-level select {
+  background: var(--kbd-bg);
+  color: var(--text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.menu-level select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.menu-hint {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.menu-controls ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.menu-controls li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted-text);
+}
+
+.menu-controls li span {
+  display: flex;
+  gap: 4px;
+}
+
 /* ---- Toggle de tema ---- */
 .theme-toggle {
   position: fixed;
