@@ -256,3 +256,126 @@ kbd {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+.hidden {
+  display: none !important;
+}
+
+.overlay[data-mode="start"] #overlay-title {
+  color: var(--accent);
+}
+
+/* ---- Récords ---- */
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.name-row {
+  display: flex;
+  gap: 6px;
+}
+
+.name-form input {
+  width: 140px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.name-form input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.name-form button {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.records {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.records-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-text);
+}
+
+.records-table td:first-child {
+  width: 24px;
+  color: var(--muted);
+}
+
+.records-table td:nth-child(2) {
+  text-align: left;
+  user-select: text;
+}
+
+.records-table td:last-child {
+  text-align: right;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+}
+
+.records-table tr.current td {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.records-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted-text);
+}
+
+.records-stats b {
+  color: var(--accent);
+}
+
+.records-stats .new b {
+  color: var(--danger);
+}
+
+.records-stats .new b::after {
+  content: ' ★';
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-family: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--danger);
+}
