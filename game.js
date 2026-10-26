@@ -4,18 +4,15 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
-  null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#90caf9', // J - azul pálido
-  '#ffb74d', // L - orange
-  '#f06292', // P - pink (punto)
-  '#b0bec5', // N - gris acero (tuerca)
-];
+// colores por skin; índice = tipo de pieza (I, O, T, S, Z, J, L, P, N)
+const SKIN_COLORS = {
+  retro:  [null, '#4dd0e1', '#ffd54f', '#ba68c8', '#81c784', '#e57373', '#90caf9', '#ffb74d', '#f06292', '#b0bec5'],
+  neon:   [null, '#00f0ff', '#fff200', '#d400ff', '#39ff14', '#ff073a', '#2979ff', '#ff9100', '#ff2bd6', '#c0c8ff'],
+  pastel: [null, '#a8e6ef', '#fdf1a8', '#d7b8f3', '#b9e8c1', '#f7b2b7', '#b8d4f5', '#fcd5a5', '#f9c0d9', '#d3d9df'],
+  pixel:  [null, '#29adff', '#ffec27', '#a35ad8', '#00e436', '#ff004d', '#3a5fcd', '#ffa300', '#ff77a8', '#83769c'],
+};
+
+let COLORS = SKIN_COLORS.retro;
 
 const PIECES = [
   null,
@@ -196,20 +193,103 @@ function updateHUD() {
   levelEl.textContent = level;
 }
 
+function roundRectPath(context, x, y, w, h, r) {
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + w, y, x + w, y + h, r);
+  context.arcTo(x + w, y + h, x, y + h, r);
+  context.arcTo(x, y + h, x, y, r);
+  context.arcTo(x, y, x + w, y, r);
+  context.closePath();
+}
+
+const SKINS = {
+  // bloques cuadrados, colores planos
+  retro: {
+    label: 'Retro',
+    drawBlock(context, px, py, size, color) {
+      context.fillStyle = color;
+      context.fillRect(px + 1, py + 1, size - 2, size - 2);
+      context.fillStyle = themeColors.highlight;
+      context.fillRect(px + 1, py + 1, size - 2, 4);
+    },
+  },
+  // fondo negro + glow con shadowBlur
+  neon: {
+    label: 'Neon',
+    background: '#000',
+    grid: '#111122',
+    drawBlock(context, px, py, size, color) {
+      context.shadowColor = color;
+      context.shadowBlur = size * 0.5;
+      context.strokeStyle = color;
+      context.lineWidth = 2;
+      context.strokeRect(px + 3, py + 3, size - 6, size - 6);
+      context.shadowBlur = size * 0.25;
+      context.fillStyle = color;
+      context.globalAlpha *= 0.35;
+      context.fillRect(px + 5, py + 5, size - 10, size - 10);
+      context.shadowBlur = 0;
+    },
+  },
+  // colores suaves, esquinas redondeadas
+  pastel: {
+    label: 'Pastel',
+    drawBlock(context, px, py, size, color) {
+      roundRectPath(context, px + 2, py + 2, size - 4, size - 4, size * 0.25);
+      context.fillStyle = color;
+      context.fill();
+      context.strokeStyle = 'rgba(255,255,255,0.6)';
+      context.lineWidth = 1.5;
+      context.stroke();
+      roundRectPath(context, px + 6, py + 5, size * 0.35, size * 0.15, size * 0.07);
+      context.fillStyle = 'rgba(255,255,255,0.45)';
+      context.fill();
+    },
+  },
+  // textura pixelada: bisel claro/oscuro + puntos
+  pixel: {
+    label: 'Pixel art',
+    drawBlock(context, px, py, size, color) {
+      const p = size / 10; // tamaño de "pixel"
+      context.fillStyle = color;
+      context.fillRect(px, py, size, size);
+      context.fillStyle = 'rgba(255,255,255,0.45)';
+      context.fillRect(px, py, size - p, p);
+      context.fillRect(px, py, p, size - p);
+      context.fillStyle = 'rgba(0,0,0,0.4)';
+      context.fillRect(px + p, py + size - p, size - p, p);
+      context.fillRect(px + size - p, py + p, p, size - p);
+      context.fillStyle = 'rgba(255,255,255,0.7)';
+      context.fillRect(px + 2 * p, py + 2 * p, p, p);
+      context.fillStyle = 'rgba(0,0,0,0.18)';
+      for (let i = 3; i < 8; i += 2)
+        for (let j = 3; j < 8; j += 2)
+          if ((i + j) % 4 === 2) context.fillRect(px + i * p, py + j * p, p, p);
+    },
+  },
+};
+
+let skin = SKINS.retro;
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  context.save();
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = themeColors.highlight;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  skin.drawBlock(context, x * size, y * size, size, COLORS[colorIndex]);
+  context.restore();
+}
+
+function clearCanvas(context, cv) {
+  context.clearRect(0, 0, cv.width, cv.height);
+  if (skin.background) {
+    context.fillStyle = skin.background;
+    context.fillRect(0, 0, cv.width, cv.height);
+  }
 }
 
 function drawGrid() {
-  ctx.strokeStyle = themeColors.grid;
+  ctx.strokeStyle = skin.grid || themeColors.grid;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -226,7 +306,7 @@ function drawGrid() {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  clearCanvas(ctx, canvas);
   drawGrid();
 
   // board
@@ -251,7 +331,7 @@ function draw() {
 
 function drawNext() {
   const NB = 30;
-  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  clearCanvas(nextCtx, nextCanvas);
   if (!next) return;
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
@@ -543,6 +623,30 @@ themeToggle.addEventListener('click', () => {
 });
 
 applyTheme('dark');
+
+const skinSelect = document.getElementById('skin-select');
+const SKIN_KEY = 'tetris-skin';
+
+function applySkin(name) {
+  if (!SKINS[name]) name = 'retro';
+  skin = SKINS[name];
+  COLORS = SKIN_COLORS[name];
+  skinSelect.value = name;
+  document.documentElement.dataset.skin = name;
+  try { localStorage.setItem(SKIN_KEY, name); } catch {}
+  if (board) { draw(); drawNext(); }
+}
+
+for (const [name, def] of Object.entries(SKINS)) skinSelect.add(new Option(def.label, name));
+
+skinSelect.addEventListener('change', () => {
+  applySkin(skinSelect.value);
+  skinSelect.blur(); // evita que las flechas cambien el skin en vez de mover la pieza
+});
+
+let savedSkin = null;
+try { savedSkin = localStorage.getItem(SKIN_KEY); } catch {}
+applySkin(savedSkin);
 
 // pantalla de inicio: tablero vacío y récords hasta pulsar Jugar
 board = createBoard();
